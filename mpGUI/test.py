@@ -189,15 +189,7 @@ Start by selecting the package from the left.
 
     def _writeData(self, packageDict):
 
-        dataText = f""" 
-{packageDict['name']} 
-Latest stable version :{packageDict['version']}  
-Summary :{packageDict['details']}    
-Homepage : {packageDict['Homepage']} 
-PyPI page :{packageDict['PyPI page']} 
-Author : {packageDict['Author']}
-
-"""
+ 
         self.sonuc.setText(f"{str(packageDict['name']).upper()}")
         self.sonuc.append("\n")
         self.sonuc.append(f"Latest stable version : {packageDict['version']} ")
