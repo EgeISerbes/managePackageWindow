@@ -18,7 +18,7 @@ class Window(QMainWindow):
         self.baseUrl = 'https://pypi.org' #datayı cekecegimiz sayfa
         self.searchurl = 'https://pypi.org/search/?q=' #sayfanın arama kısmı
         self.headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101 Firefox/78.0'} #bağlantının engellenmemesi için kullanılan user agent
-
+        self.setStyleSheet(open('styling.qss','r').read())
         widget = QWidget()
         v_box = QVBoxLayout()
         h_box = QHBoxLayout()
@@ -34,7 +34,9 @@ class Window(QMainWindow):
         self._setInstructıonPage() #GUI ilk açıldığında gözüken sayfa
 
         self.sonuc = QTextEdit()
+        self.sonuc.setFrameStyle(0)
         self.sonuc.setReadOnly(True)
+        self.sonuc.setFixedHeight(300)
         v_box.addLayout(h_box)
         v_box.addLayout(h_box1)
 
@@ -63,8 +65,9 @@ class Window(QMainWindow):
         packageDict = {} #bilgileri toplayacağımız dictionary yapısı
         try :
             callout_block = soup.find('div',class_='callout-block')
-            self._packageNotFound()
+
         except :
+            self._packageNotFound()
             print(".")
         packages = soup.find_all('ul', class_='unstyled')
         isnotFound = True
@@ -107,10 +110,12 @@ class Window(QMainWindow):
         packageDict['PyPI page'] = packageUrl
         targetHeader1 = 'Project links'
         targetHeader2 = 'Meta'
-        th1counter = 1
-        the2counter = 1
+
         r = requests.get(packageUrl, self.headers)
         soup = BeautifulSoup(r.content, 'html.parser')
+        findAuthor = 0
+        findHeaders= []
+        findLinks = []
         try:
 
             sidebar_section = soup.find('a',class_='vertical-tabs__tab vertical-tabs__tab--with-icon vertical-tabs__tab--condensed') #paketin kendi sayfasının linkini çekmek için
@@ -119,16 +124,31 @@ class Window(QMainWindow):
 
 
 
-
-
-
-
         except:
             packageDict['Homepage'] = ''
+        try :
+
+            paragraphs = soup.find_all('p')
+
+
+            i = 0
+            for links in paragraphs:
+
+                for perLink in links.find_all('strong'):
+                    findHeaders += perLink
+
+                    if(findHeaders[findAuthor] == 'Author:'):
+                        for author in links.find_all('a',href=True):
+                            packageDict['Author'] = author
+
+
+                    else :
+                        findAuthor += 1
 
 
 
-
+        except :
+            packageDict['Author'] = ''
 
         self._writeData(packageDict)
 
@@ -175,12 +195,17 @@ Latest stable version :{packageDict['version']}
 Summary :{packageDict['details']}    
 Homepage : {packageDict['Homepage']} 
 PyPI page :{packageDict['PyPI page']} 
+Author : {packageDict['Author']}
 
 """
-        self.sonuc.setText(dataText)
+        self.sonuc.setText(f"{str(packageDict['name']).upper()}")
+        self.sonuc.append("\n")
+        self.sonuc.append(f"Latest stable version : {packageDict['version']} ")
+        self.sonuc.append(f"Summary :{packageDict['details']} ")
+        self.sonuc.append(f"Homepage : {packageDict['Homepage']}  ")
+        self.sonuc.append(f"PyPI page :{packageDict['PyPI page']} ")
+        self.sonuc.append(f"Author : {packageDict['Author']} ")
         return
-
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = Window()
